@@ -1,13 +1,10 @@
 import sys
-
+import random
 import pygame
+from pygame.locals import *
 from simulation import Simulation
 import numpy as np
-
-
-
-
-
+from os import path
 
 pygame.init()
 
@@ -16,20 +13,26 @@ clock = pygame.time.Clock()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 640
 
-BG = (0, 0, 0)
+images_path = 'images'
+# bg_image = pygame.image.load(path.join(images_path, 'ceu.jpg'))
+
+BG = (255, 255, 255)
 
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 pygame.display.set_caption('Pygame Drone')
+# screen.blit(bg_image, (0, 0))
 
 def draw_bg():
     screen.fill(BG)
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, image_path, width, height):
+    def __init__(self, image_path, width, height, scale):
         super().__init__()
 
-        self.image = pygame.Surface((width, height), pygame.SRCALPHA)
-        pygame.draw.polygon(self.image, (0, 0, 0), ((0, 0), (width, 0), (width, height), (0, height)))
+        # self.image = pygame.Surface((width, height), pygame.SRCALPHA)
+        # pygame.draw.polygon(self.image, (0, 0, 0), ((0, 0), (width, 0), (width, height), (0, height)))
+        img = pygame.image.load(f'images/drone/drone5.png')
+        self.image = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
         self.original_image = self.image
 
         self.rect = self.image.get_rect(center = (0, 0))
@@ -40,11 +43,11 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.original_image, angle * 180 / np.pi)
         self.rect = self.image.get_rect(center = self.rect.center)
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
+    def draw(self):
+        screen.blit(self.image, self.rect)
 
 
-P = Player(f'images/drone/drone5.PNG', 50, 5)
+P = Player('drone5.png', 50, 5, 0.5)
 S = Simulation()
 
 pos_last_px = np.array([0, 0])
@@ -55,7 +58,7 @@ def interpolate(xa, x1, x2, y1, y2):
 
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == QUIT:
             pygame.quit()
             sys.exit()
 
@@ -75,7 +78,8 @@ while True:
         pygame.quit()
         sys.exit()
 
-    P.draw(screen)
+    # screen.blit(bg_image, (0, 0))
+    P.draw()
 
     pygame.display.update()
-    clock.tick(60)
+    clock.tick(1000)

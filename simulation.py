@@ -1,15 +1,12 @@
 import numpy as np
 
 
-#######################################
-
 class Simulation:
-
     def __init__(self):
         # PARÂMETROS DE SIMULAÇÃO
         self.finished = False
-        self.h = 5e-4  # passo da simulação de tempo continuo
-        self.Ts = 0.005  # intervalo de atuação do controlador
+        self.h = 5e-3  # passo da simulação de tempo continuo
+        self.Ts = 0.05  # intervalo de atuação do controlador
         self.fTh = self.Ts/self.h
         self.maxT = 60
         self.tc = np.arange(0, self.maxT, self.h)  # k
@@ -40,7 +37,7 @@ class Simulation:
         self.kf = 1.744e-08  # constante de força
         self.Iz = 2e-4  # momento de inércia
         self.tal = 0.05
-        self.Fg = np.array([[0], [-self.m * self.g]]) ###################################################################
+        self.Fe = np.array([-self.m * self.g]) ###################################################################
 
         # Restrições do controle
         self.phi_max = 15 * np.pi / 180.  # ângulo máximo
@@ -96,7 +93,7 @@ class Simulation:
                 print(self.r_ID)
 
             Fx = kpP * eP[0] + kdP * eV[0]
-            Fy = kpP * eP[1] + kdP * eV[1] - self.Fg[1] #############################################################
+            Fy = kpP * eP[1] + kdP * eV[1] - self.Fe #############################################################
             Fy = np.maximum(0.2 * self.Fc_max, np.minimum(Fy, 0.8 * self.Fc_max))
 
             # Controle de Atitude
@@ -164,54 +161,54 @@ class Simulation:
         k2 = self.x_dot(tk + h / 2.0, xk + h * k1 / 2.0, uk)
         k3 = self.x_dot(tk + h / 2.0, xk + h * k2 / 2.0, uk)
         k4 = self.x_dot(tk + h, xk + h * k3, uk)
-        xkp1 = xk + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+        self.xkp1 = xk + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
 
         return self.xkp1
 
     def x_dot(self, t, x, w_):
         # Parâmetros
-        self.w_max = 15000.  # velocidade máxima do motor
-        self.m = 0.25  # massa
-        self.g = 9.81  # aceleração da gravidade
-        self.l = 0.1  # tamanho
-        self.kf = 1.744e-08  # constante de força
-        self.Iz = 2e-4  # momento de inércia
-        self.tal = 0.005
-        self.Fg = np.array([[0], [-self.m * self.g]])
+        w_max = 15000.  # velocidade máxima do motor
+        m = 0.25  # massa
+        g = 9.81  # aceleração da gravidade
+        l = 0.1  # tamanho
+        kf = 1.744e-08  # constante de força
+        Iz = 2e-4  # momento de inércia
+        tal = 0.005
+        Fg = np.array([[0], [-m * g]])
 
         ## Estados atuais
-        self.w = self.x[0:2]
-        self.r = self.x[2:4]
-        self.v = self.x[4:6]
-        self.phi = self.x[6]
-        self.ome = self.x[7]
+        w = x[0:2]
+        r = x[2:4]
+        v = x[4:6]
+        phi = x[6]
+        ome = x[7]
 
         ## Variáveis auxiliares
         # forças
-        f1 = self.kf * self.w[0] ** 2
-        f2 = self.kf * self.w[1] ** 2
+        f1 = kf * w[0] ** 2
+        f2 = kf * w[1] ** 2
 
         # Torque
-        Tc = self.l * (f1 - f2)
+        Tc = l * (f1 - f2)
 
         # Força de controle
-        self.Fc_B = np.array([[0], [(f1 + f2)]])
+        Fc_B = np.array([[0], [(f1 + f2)]])
 
         # Matriz de atitude
-        self.D_RB = np.array([[np.cos(self.phi), -np.sin(self.phi)], [np.sin(self.phi), np.cos(self.phi)]])
+        D_RB = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
 
         ## Derivadas
-        self.w_dot = (-self.w + w_) / self.tal
-        self.r_dot = self.v
-        self.v_dot = (1 / self.m) * (self.D_RB @ self.Fc_B + self.Fg)
-        self.v_dot = self.v_dot.reshape(2, )
-        self.phi_dot = np.array([self.ome])
-        self.ome_dot = np.array([Tc / self.Iz])
+        w_dot = (-w + w_) / tal
+        r_dot = v
+        v_dot = (1 / m) * (D_RB @ Fc_B + Fg)
+        v_dot = v_dot.reshape(2, )
+        phi_dot = np.array([ome])
+        ome_dot = np.array([Tc / Iz])
 
-        self.xkp1 = np.concatenate([self.w_dot,
-                                    self.r_dot,
-                                    self.v_dot,
-                                    self.phi_dot,
-                                    self.ome_dot])
+        xkp1 = np.concatenate([w_dot,
+                                r_dot,
+                                v_dot,
+                                phi_dot,
+                                ome_dot])
 
-        return self.xkp1
+        return xkp1
