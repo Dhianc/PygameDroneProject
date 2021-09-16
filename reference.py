@@ -2,7 +2,7 @@ import sys
 import random
 import pygame
 from pygame.locals import *
-from simulation import Simulation
+from control import Simulation
 import numpy as np
 from os import path
 
@@ -14,16 +14,13 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 640
 
 images_path = 'images'
-# bg_image = pygame.image.load(path.join(images_path, 'ceu.jpg'))
+bg_image = pygame.image.load(path.join(images_path, 'ceu.jpg'))
 
-BG = (255, 255, 255)
 
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 pygame.display.set_caption('Pygame Drone')
-# screen.blit(bg_image, (0, 0))
+screen.blit(bg_image, (0, 0))
 
-def draw_bg():
-    screen.fill(BG)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, image_path, width, height, scale):
@@ -31,7 +28,7 @@ class Player(pygame.sprite.Sprite):
 
         # self.image = pygame.Surface((width, height), pygame.SRCALPHA)
         # pygame.draw.polygon(self.image, (0, 0, 0), ((0, 0), (width, 0), (width, height), (0, height)))
-        img = pygame.image.load(f'images/drone/drone5.png')
+        img = pygame.image.load(image_path)
         self.image = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
         self.original_image = self.image
 
@@ -47,7 +44,7 @@ class Player(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 
-P = Player('drone5.png', 50, 5, 0.5)
+P = Player(f'images/drone/drone6.png', 50, 5, 0.2)
 S = Simulation()
 
 pos_last_px = np.array([0, 0])
@@ -65,8 +62,8 @@ while True:
     if not S.is_over():
         pos_abs_m, angle = S.iterate()
 
-        x_abs_px = interpolate(pos_abs_m[0], -55, 20, 0, SCREEN_WIDTH)
-        y_abs_px = interpolate(pos_abs_m[1], -0.5, 16, 0, SCREEN_HEIGHT)
+        x_abs_px = interpolate(pos_abs_m[0], -60, 25, 0, SCREEN_WIDTH)
+        y_abs_px = interpolate(pos_abs_m[1], -2, 17, 0, SCREEN_HEIGHT)
         y_abs_px = SCREEN_HEIGHT - y_abs_px
 
         pos_abs_px = np.array([int(x_abs_px), int(y_abs_px)])
@@ -78,7 +75,7 @@ while True:
         pygame.quit()
         sys.exit()
 
-    # screen.blit(bg_image, (0, 0))
+    screen.blit(bg_image, (0, 0))
     P.draw()
 
     pygame.display.update()
