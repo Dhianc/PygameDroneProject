@@ -1,6 +1,7 @@
 import numpy as np
 
 
+
 class Control:
     def x_dot(self, t, x, w_):
         # Parâmetros
@@ -65,7 +66,7 @@ class Control:
         self.h = 0.005  # passo da simulação de tempo continuo
         self.Ts = 0.05  # intervalo de atuação do controlador
         self.fTh = self.Ts/self.h
-        self.maxT = 60
+        self.maxT = 600
         self.tc = np.arange(0, self.maxT, self.h)  # k
         self.td = np.arange(0, self.maxT, self.Ts)  # j
         tam = len(self.tc)
@@ -104,11 +105,16 @@ class Control:
         self.Tc_max = self.l * self.kf * self.w_max**2
 
         # Waypoints
+        #print("antes das posições")
         self.r_ = np.array([[0., 10.],
                             [15., 10.],
                             [-50., 2.],
                             [-20., 15.],
                             [0., 0.]]).transpose()
+
+        
+        #print("depois das posições")
+
         self.r_ID = 0
         self.r_IDN = 4
 
@@ -122,9 +128,11 @@ class Control:
         #     f[0:2, k] = np.array([self.kf * w[0] ** 2, self.kf * w[1] ** 2])
         #     f[2, k] = f[0, k] + f[1, k]  # Força total em B
 
-    def iterate(self):
+
+    def movimenta(self, esquerda, direita, cima, baixo, comandar):
     # for k in range(tam-1):
         # Sistema de controle
+
         if(self.k % self.fTh) == 0:
             # Extrai os dados do  vetor
             r_k = self.x[2:4, self.k]
@@ -138,14 +146,43 @@ class Control:
             # Controle de Posição
             kpP = np.array([0.075])
             kdP = np.array([0.25])
-            eP = self.r_[:, self.r_ID] - r_k
+            
+            if comandar == False:
+                global eP
+                global aP
+                aP = self.r_[:, self.r_ID]
+                eP = aP - r_k
+                if np.linalg.norm(eP) < .1 and self.r_ID < self.r_IDN:
+                    self.r_ID += 1
+                if self.r_ID == self.r_IDN:
+                    aP = self.r_[:, self.r_ID]
+            if comandar == True:                
+                if esquerda == True:
+                    aP = aP + [-0.5,0]
+                    if aP[0] < -54:
+                        aP[0] = -54
+                    print(aP)
+                if direita == True:
+                    aP = aP + [0.5,0]
+                    if aP[0] > 20:
+                        aP[0] = 20
+                if cima == True:
+                    aP = aP + [0,0.5]
+                    if aP[1] > 16:
+                        aP[1] = 16
+                if baixo == True:
+                    aP = aP + [0,-0.5]
+                    if aP[1] < 0:
+                        aP[1] = 0
+            eP = aP - r_k
+            print(r_k.round())
+
+
             eV = v_ - v_k
             # eP_[:, j] = eP
 
             # Definição do próximo waypoint
-            if np.linalg.norm(eP) < .1 and self.r_ID < self.r_IDN:
-                self.r_ID += 1
-                # print(self.r_ID)
+
 
             Fx = kpP * eP[0] + kdP * eV[0]
             Fy = kpP * eP[1] + kdP * eV[1] - self.Fe #############################################################
@@ -208,9 +245,6 @@ class Control:
         angle = self.x[6, self.k]
         return pos, angle
 
-    def is_over(self):
+    def is_over(self):        
         return self.finished
-
-
-
-
+        print("final de control")
