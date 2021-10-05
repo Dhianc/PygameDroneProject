@@ -121,12 +121,12 @@ class Control:
         # Processamento de variáveis intermediárias
 
         # obtem a força aplicada por cada rotor
-        # f = np.zeros([3, tam])
-        #
-        # for k in range(tam):
-        #     w = self.x[0:2, k]
-        #     f[0:2, k] = np.array([self.kf * w[0] ** 2, self.kf * w[1] ** 2])
-        #     f[2, k] = f[0, k] + f[1, k]  # Força total em B
+        f = np.zeros([3, tam])
+
+        for k in range(tam):
+            w = self.x[0:2, k]
+            f[0:2, k] = np.array([self.kf * w[0] ** 2, self.kf * w[1] ** 2])
+            f[2, k] = f[0, k] + f[1, k]  # Força total em B
 
 
     def movimenta(self, esquerda, direita, cima, baixo, comandar):
@@ -161,7 +161,6 @@ class Control:
                     aP = aP + [-0.5,0]
                     if aP[0] < -54:
                         aP[0] = -54
-                    print(aP)
                 if direita == True:
                     aP = aP + [0.5,0]
                     if aP[0] > 20:
@@ -175,7 +174,7 @@ class Control:
                     if aP[1] < 0:
                         aP[1] = 0
             eP = aP - r_k
-            print(r_k.round())
+            # print(r_k.round())
 
 
             eV = v_ - v_k
@@ -185,7 +184,7 @@ class Control:
 
 
             Fx = kpP * eP[0] + kdP * eV[0]
-            Fy = kpP * eP[1] + kdP * eV[1] - self.Fe #############################################################
+            Fy = kpP * eP[1] + kdP * eV[1] - self.Fe
             Fy = np.maximum(0.2 * self.Fc_max, np.minimum(Fy, 0.8 * self.Fc_max))
 
             # Controle de Atitude
@@ -244,7 +243,3 @@ class Control:
         pos = self.x[2:4, self.k]
         angle = self.x[6, self.k]
         return pos, angle
-
-    def is_over(self):        
-        return self.finished
-        print("final de control")
